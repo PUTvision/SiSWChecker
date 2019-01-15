@@ -8,7 +8,7 @@ import click as click
 import numpy as np
 
 VALID_RESULTS = {
-    'img_000.jpg': np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+    'img_000.jpg': np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1]),
     'img_001.jpg': np.array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]),
     'img_002.jpg': np.array([3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
     'img_003.jpg': np.array([1, 0, 0, 1, 1, 0, 2, 2, 2, 0, 1, 1, 0, 1, 1]),
@@ -17,7 +17,7 @@ VALID_RESULTS = {
     'img_006.jpg': np.array([4, 4, 2, 7, 5, 5, 2, 2, 2, 0, 1, 1, 3, 3, 3]),
     'img_007.jpg': np.array([5, 5, 6, 4, 4, 5, 2, 1, 3, 3, 2, 2, 0, 0, 0]),
     'img_008.jpg': np.array([5, 5, 6, 4, 4, 5, 2, 3, 3, 5, 3, 5, 1, 0, 0]),
-    'img_009.jpg': np.array([1, 7, 6, 9, 8, 8, 3, 3, 3, 5, 3, 5, 3, 3, 3]),
+    'img_009.jpg': np.array([6, 7, 6, 9, 8, 8, 3, 3, 3, 5, 3, 5, 3, 3, 3]),
 }
 
 
@@ -92,7 +92,7 @@ def process_application_directory(path: Path, images_directory: Path, output_dir
             try:
                 with open(stdout_file, 'w') as stdout, open(stderr_file, 'w') as stderr:
                     subprocess.run([str(application_file), str(images_directory), str(results_file)],
-                                   stdout=stdout, stderr=stderr, timeout=100)
+                                   cwd=str(path), stdout=stdout, stderr=stderr, timeout=100)
             except subprocess.TimeoutExpired:
                 return student_name, 'TIMEOUT'
             except subprocess.SubprocessError:
