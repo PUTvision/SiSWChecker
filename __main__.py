@@ -80,7 +80,7 @@ def process_application_directory(path: Path, images_directory: Path, output_dir
         if application_file.name.endswith('.exe'):
             student_name = application_file.name[:-4]
             student_output_dir = output_dir / student_name
-            student_output_dir.mkdir()
+            student_output_dir.mkdir(exist_ok=True)
             results_file = student_output_dir / 'results.txt'
             stdout_file = student_output_dir / 'stdout'
             stderr_file = student_output_dir / 'stderr'
