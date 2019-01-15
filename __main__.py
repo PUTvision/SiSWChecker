@@ -61,14 +61,17 @@ def compute_results(output_directory: Path) -> Dict[str, float]:
         if results_file_path.exists():
             try:
                 images_scores_sum = 0.0
+                number_of_lines = 0
                 with open(results_file_path) as results_file:
                     for line in results_file:
+                        number_of_lines += 1
                         split_line = line.split(' ')
                         ground_truth = VALID_RESULTS[split_line[0]]
                         image_results = np.array(split_line[1:], dtype=np.int)
                         images_scores_sum += np.sum(np.abs(image_results - ground_truth)) / np.sum(ground_truth)
 
-                results[student_output_directory.name] = images_scores_sum / 15
+                score = images_scores_sum / len(VALID_RESULTS) if number_of_lines else float('inf')
+                results[student_output_directory.name] = score
             except Exception as e:
                 print(f'{student_output_directory.name} failed: {e}', file=sys.stderr)
 
