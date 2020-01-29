@@ -1,4 +1,5 @@
 import json
+import platform
 import subprocess
 import sys
 import tempfile
@@ -10,8 +11,16 @@ import click
 import numpy as np
 
 VALID_RESULTS = {
-    'img_009.jpg': np.array([28, 16, 21, 34, 23, 16]),
-    'img_010.jpg': np.array([28, 16, 21, 34, 23, 16]),
+    'img_001': np.array([37, 10, 15, 30, 28, 17, 10, 31, 9, 28, 23, 10]),
+    'img_002': np.array([37, 10, 15, 30, 28, 17, 10, 31, 9, 28, 23, 10]),
+    'img_003': np.array([16, 29, 24, 31, 27, 41, 15]),
+    'img_004': np.array([16, 29, 24, 31, 27, 41, 15]),
+    'img_005': np.array([13, 14, 35, 13, 15, 26, 29, 4]),
+    'img_006': np.array([12, 14, 35, 13, 15, 26, 29, 4]),
+    'img_007': np.array([16, 12, 27, 28, 14, 31]),
+    'img_008': np.array([16, 12, 27, 28, 14, 31]),
+    'img_009': np.array([28, 16, 21, 34, 23, 16]),
+    'img_010': np.array([28, 16, 21, 34, 23, 16]),
 }
 
 
@@ -55,6 +64,9 @@ def run_applications(applications_directory: Path, input_file: Path, images_dire
 def compute_results(output_directory: Path) -> Dict[str, float]:
     results = {}
     for student_output_directory in output_directory.iterdir():
+        if not student_output_directory.is_dir():
+            continue
+
         results_file_path: Path = student_output_directory / 'results.json'
         try:
             with results_file_path.open() as results_file:
@@ -64,7 +76,7 @@ def compute_results(output_directory: Path) -> Dict[str, float]:
             for image_name, valid_result in VALID_RESULTS.items():
                 image_result = results[image_name] if image_name in results else 0
                 image_result = image_result if len(image_result) == len(valid_result) else 0
-                images_scores_sum += np.sum(np.abs(image_result - valid_result)) / len(valid_result)
+                images_scores_sum += np.sum(np.abs(image_result - valid_result)) / np.sum(valid_result)
 
             score = images_scores_sum / len(VALID_RESULTS)
             results[student_output_directory.name] = score
@@ -83,7 +95,8 @@ def process_application_directory(path: Path, input_file: Path, images_directory
         temp_venv_dir = Path(tempfile.gettempdir()) / 'SiSWVenv'
         venv_builder = venv.EnvBuilder(system_site_packages=True, clear=True, with_pip=True)
         venv_builder.create(str(temp_venv_dir))
-        interpreter = str(temp_venv_dir / 'bin' / 'python')
+        is_windows = any(platform.win32_ver())
+        interpreter = str(temp_venv_dir / 'scripts' / 'python') if is_windows else str(temp_venv_dir / 'bin' / 'python')
         try:
             subprocess.check_call([interpreter, '-m', 'pip', '-qqq', 'install', '-r', str(requirements_file)])
         except subprocess.CalledProcessError:
@@ -96,7 +109,7 @@ def process_application_directory(path: Path, input_file: Path, images_directory
             student_name = application_file.name[:-3]
             student_output_dir = output_dir / student_name
             student_output_dir.mkdir(exist_ok=True)
-            results_file = student_output_dir / 'results.txt'
+            results_file = student_output_dir / 'results.json'
             stdout_file = student_output_dir / 'stdout'
             stderr_file = student_output_dir / 'stderr'
 
@@ -104,8 +117,7 @@ def process_application_directory(path: Path, input_file: Path, images_directory
             try:
                 with stdout_file.open('w') as stdout, stderr_file.open('w') as stderr:
                     subprocess.run([interpreter, str(application_file), str(images_directory), str(input_file),
-                                    str(results_file)], cwd=str(path), stdout=stdout, stderr=stderr, timeout=100,
-                                   env={'PYTHONPATH': str(path)})
+                                    str(results_file)], cwd=str(path), stdout=stdout, stderr=stderr, timeout=100)
             except subprocess.TimeoutExpired:
                 return student_name, 'TIMEOUT'
             except subprocess.SubprocessError:
