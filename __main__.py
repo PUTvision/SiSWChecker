@@ -62,7 +62,7 @@ def run_applications(applications_directory: Path, input_file: Path, images_dire
 
 
 def compute_results(output_directory: Path) -> Dict[str, float]:
-    results = {}
+    global_results = {}
     for student_output_directory in output_directory.iterdir():
         if not student_output_directory.is_dir():
             continue
@@ -79,11 +79,11 @@ def compute_results(output_directory: Path) -> Dict[str, float]:
                 images_scores_sum += np.sum(np.abs(image_result - valid_result)) / np.sum(valid_result)
 
             score = images_scores_sum / len(VALID_RESULTS)
-            results[student_output_directory.name] = score
+            global_results[student_output_directory.name] = score
         except Exception as e:
             print(f'{student_output_directory.name} failed: {e}', file=sys.stderr)
 
-    return results
+    return global_results
 
 
 def process_application_directory(path: Path, input_file: Path, images_directory: Path,
